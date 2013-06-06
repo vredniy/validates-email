@@ -1,8 +1,15 @@
 module ValidatesEmail
-  def validates_email_of attr_name
-    email_regex = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
-    self.validates_format_of attr_name, 
-      with: email_regex, 
-      message:  'is not a valid email address'
+  module Validations
+    class EmailValidator < ::ActiveModel::EachValidator
+      def validate_each(record, attribute, value)
+        record.errors[attribute] << (options[:message] || 'is invalid') unless value =~ /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
+      end
+    end
+
+    module ClassMethods
+      def validates_email(*attr_names)
+        validates_with ValidatesEmail::Validations::EmailValidator, _merge_attributes(attr_names)
+      end
+    end
   end
 end
